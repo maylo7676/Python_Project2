@@ -1,0 +1,206 @@
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+# ==============================
+# 1. LOAD DATASET
+# ==============================
+
+df = pd.read_csv('carbon_emission_dataset_with_Industry.csv')
+
+print("First rows:")
+print(df.head())
+
+print("\nInfo:")
+print(df.info())
+
+print("\nDescribe:")
+print(df.describe())
+
+# ==============================
+# 2. DATA CLEANING
+# ==============================
+
+print("\nMissing values:")
+print(df.isnull().sum())
+
+df = df.fillna(df.mean(numeric_only=True))
+
+# Convert Date column
+df['Date'] = pd.to_datetime(df['Date'], errors='coerce')
+
+# ==============================
+# 3. BASIC STATISTICS
+# ==============================
+
+cols = [
+    'Total_Energy_Consumption_kWh',
+    'Renewable_Energy_Consumption_kWh',
+    'NonRenewable_Energy_Consumption_kWh',
+    'Production_Output_Units',
+    'Supply_Chain_Transport_km'
+]
+
+print("\nBasic Stats:")
+print(df[cols].agg(['mean', 'median', 'max', 'min']))
+
+# ==============================
+# 4. DISTRIBUTIONS
+# ==============================
+
+for col in cols:
+    plt.figure(figsize=(8,5))
+    sns.histplot(df[col], kde=True)
+    plt.title(f'Distribution of {col}')
+    plt.tight_layout()
+    plt.show()
+
+# ==============================
+# 5. BAR CHART
+# ==============================
+
+plt.figure(figsize=(10,5))
+df['Industry_Sectors'].value_counts().plot(kind='bar')
+plt.title('Industry Frequency')
+plt.xlabel('Industry Sector')
+plt.ylabel('Count')
+plt.tight_layout()
+plt.show()
+
+# ==============================
+# 6. LINE PLOT
+# ==============================
+
+plt.figure(figsize=(12,5))
+plt.plot(df['Date'], df['Total_Energy_Consumption_kWh'])
+plt.title('Energy Consumption Over Time')
+plt.xlabel('Date')
+plt.ylabel('Energy Consumption (kWh)')
+plt.xticks(rotation=45)
+plt.tight_layout()
+plt.show()
+
+# ==============================
+# 7. SCATTER PLOT
+# ==============================
+
+plt.figure(figsize=(8,5))
+sns.scatterplot(
+    x='Total_Energy_Consumption_kWh',
+    y='Carbon_Emission_tCO2e_TARGET',
+    data=df
+)
+plt.title('Energy Consumption vs Carbon Emissions')
+plt.xlabel('Energy Consumption (kWh)')
+plt.ylabel('Carbon Emissions')
+plt.tight_layout()
+plt.show()
+
+# ==============================
+# 8. CORRELATION HEATMAP
+# ==============================
+
+plt.figure(figsize=(12,8))
+sns.heatmap(
+    df.corr(numeric_only=True),
+    annot=True,
+    cmap='coolwarm',
+    fmt='.2f'
+)
+plt.title('Correlation Heatmap')
+plt.tight_layout()
+plt.show()
+
+# ==============================
+# 9. BOXPLOT
+# ==============================
+
+plt.figure(figsize=(8,5))
+sns.boxplot(y=df['Carbon_Emission_tCO2e_TARGET'])
+plt.title('Carbon Emissions Boxplot')
+plt.tight_layout()
+plt.show()
+
+# ==============================
+# 10. PAIRPLOT
+# ==============================
+
+sns.pairplot(df[cols + ['Carbon_Emission_tCO2e_TARGET']])
+plt.show()
+
+# ==============================
+# 11. GROUP ANALYSIS
+# ==============================
+
+if 'Industry_Sectors' in df.columns:
+    print("\nAverage Emissions by Industry:")
+    print(
+        df.groupby('Industry_Sectors')['Carbon_Emission_tCO2e_TARGET']
+        .mean()
+        .sort_values(ascending=False)
+    )
+
+# ==============================
+# 12. TIME SERIES ANALYSIS
+# ==============================
+
+df = df.sort_values('Date')
+df.set_index('Date', inplace=True)
+
+df['Carbon_Emission_tCO2e_TARGET'].plot(
+    figsize=(12,5),
+    title='Carbon Emissions Over Time'
+)
+plt.ylabel('Carbon Emissions')
+plt.show()
+
+# Rolling Mean
+
+df['Rolling Mean'] = (
+    df['Carbon_Emission_tCO2e_TARGET']
+    .rolling(window=7)
+    .mean()
+)
+
+df[['Carbon_Emission_tCO2e_TARGET', 'Rolling Mean']].plot(
+    figsize=(12,5),
+    title='Carbon Emissions and 7-Day Rolling Mean'
+)
+plt.ylabel('Carbon Emissions')
+plt.show()
+
+# ==============================
+# 13. DECOMPOSITION
+# ==============================
+
+from statsmodels.tsa.seasonal import seasonal_decompose
+
+result = seasonal_decompose(
+    df['Carbon_Emission_tCO2e_TARGET'].dropna(),
+    model='additive',
+    period=30
+)
+
+result.plot()
+plt.show()
+
+# ==============================
+# 14. ADVANCED QUESTIONS
+# ==============================
+
+print("\nQ1: Variability (STD):")
+print(df[cols].std())
+
+print("\nQ2: Correlation with Carbon Emissions:")
+print(
+    df.corr(numeric_only=True)['Carbon_Emission_tCO2e_TARGET']
+    .sort_values(ascending=False)
+)
+
+# ==============================
+# 15. PROJECT CONCLUSION
+# ==============================
+
+print("\nProject Completed Successfully.")
+print("Key insights generated from statistical analysis, visualizations, correlations, and time-series analysis.")
